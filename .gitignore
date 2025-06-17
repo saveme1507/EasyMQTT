@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# PlatformIO
+.pio/
+.vscode/
+
+# Arduino
+*.ino.*
+*.bak
+
+# Logs
+*.log
+
+# Compiled objects
+*.o
+*.a
+*.elf
+
+# Firmware
+*.bin
+*.hex
