@@ -1,0 +1,43 @@
+{
+    "name": "EasyMQTT",
+    "version": "1.0.0",
+    "description": "Simple MQTT wrapper for ESP32 with SSL, OTA, and Blynk-style usage",
+    "keywords": [
+        "mqtt",
+        "ssl",
+        "iot",
+        "esp32",
+        "blynk-style",
+        "ota"
+    ],
+    "authors": [
+        {
+            "name": "saveme1507",
+            "email": "saveme1507@gmail.com"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/saveme1507/EasyMQTT"
+    },
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "espressif32"
+    ],
+    "dependencies": [
+        {
+            "name": "knolleary/PubSubClient",
+            "version": "^2.8"
+        },
+        {
+            "name": "arduino-libraries/ArduinoHttpClient",
+            "version": "^0.4.0"
+        },
+        {
+            "name": "bblanchon/ArduinoJson",
+            "version": "^7.4.1"
+        }
+    ]
+}
