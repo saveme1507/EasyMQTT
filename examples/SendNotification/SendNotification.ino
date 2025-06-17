@@ -13,8 +13,10 @@ const char *MQTT_PASS = "password";
 const char *USER = "user";
 const char *DEVICE = "esp32";
 
+#define EASY_MQTT_TOKEN "XXXXX"
+
 // Inisialisasi EasyMQTT
-EasyMQTT mqtt(USER, DEVICE, MQTT_SERVER, MQTT_PORT, MQTT_USER, MQTT_PASS);
+EasyMQTT mqtt(EASY_MQTT_TOKEN);
 
 void setup()
 {

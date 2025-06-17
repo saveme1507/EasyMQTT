@@ -18,7 +18,7 @@ void setup()
     Serial.println("init setup");
 
     // Hubungkan ke WiFi
-    mqtt.begin("SSID", "PASSWORD");
+    mqtt.begin("WIFI_SSID", "WIFI_PASSWORD");
 
     // Handler saat terputus dari broker MQTT
     mqtt.onDisconnected([]()
