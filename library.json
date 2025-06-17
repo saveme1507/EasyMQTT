@@ -10,6 +10,7 @@
         "blynk-style",
         "ota"
     ],
+    "license": "MIT",
     "authors": [
         {
             "name": "saveme1507",
