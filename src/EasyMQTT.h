@@ -63,10 +63,12 @@ private:
   String _user;
   String _device;
   String _mqttServer;
-  int _mqttPort;
   String _mqttUser;
   String _mqttPassword;
   String _token;
+  String _mqttToken;
+
+  int _mqttPort;
 
   WiFiClientSecure _secureClient;
   PubSubClient _client;

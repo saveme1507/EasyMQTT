@@ -1,7 +1,7 @@
 {
     "name": "EasyMQTT",
-    "version": "1.0.0",
-    "description": "Simple MQTT wrapper for ESP32 with SSL, OTA, and Blynk-style usage",
+    "version": "1.0.1",
+    "description": "Simple MQTT wrapper for ESP32, ESP8266, wemos with SSL, OTA, and Blynk-style usage",
     "keywords": [
         "mqtt",
         "ssl",
@@ -14,7 +14,7 @@
     "authors": [
         {
             "name": "saveme1507",
-            "email": "saveme1507@gmail.com"
+            "email": "asepsoo55@gmail.com"
         }
     ],
     "repository": {
@@ -25,7 +25,8 @@
         "arduino"
     ],
     "platforms": [
-        "espressif32"
+        "espressif32",
+        "espressif8266"
     ],
     "dependencies": [
         {

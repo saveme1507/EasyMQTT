@@ -8,13 +8,15 @@ std::vector<EasyMQTT::PendingHandler> EasyMQTT::_pendingHandlers;
 
 EasyMQTT *_instance = nullptr;
 
+unsigned long lastVPinTime[101] = {0}; // Index 0-100 untuk V0–V100
+
 EasyMQTT &EasyMQTT::getInstance()
 {
   return *_instance;
 }
 
 EasyMQTT::EasyMQTT(const char *token)
-    : _token(token)
+    : _mqttToken(token)
 {
   _instance = this;
 }
@@ -33,7 +35,7 @@ void EasyMQTT::begin(const char *ssid, const char *password)
 
   if (!fetchDeviceConfig())
   {
-    Serial.println("Gagal mengambil konfigurasi");
+    EASYMQTT_LOG("Gagal mengambil konfigurasi");
     return;
   }
 
@@ -110,6 +112,16 @@ void EasyMQTT::subscribe(const String &vpin, EasyMQTTCallback callback)
 
 void EasyMQTT::publish(const String &vpin, const String &payload)
 {
+  unsigned long now = millis();
+
+  if ((long)(now - lastVPinTime[vpin]) < 500)
+  {
+    EASYMQTT_LOG(vpin + " publish terlalu cepat");
+    return;
+  }
+
+  lastVPinTime[vpin] = now;
+
   EASYMQTT_LOG(getTopic(vpin).c_str());
   EASYMQTT_LOG(payload.c_str());
   _client.publish(getTopic(vpin).c_str(), payload.c_str());
@@ -122,6 +134,15 @@ String EasyMQTT::getTopic(const String &vpin)
 
 void EasyMQTT::sendNotification(const String &title, const String &message)
 {
+  unsigned long now = millis();
+  if ((long)(now - lastNotifTime) < 10000)
+  {
+    EASYMQTT_LOG("Notifikasi terlalu cepat");
+    return;
+  }
+
+  lastNotifTime = now;
+
   String topic = String(_user) + "/" + _device + "/notification";
   String payload = "{\"title\":\"" + title + "\",\"message\":\"" + message + "\"}";
   _client.publish(topic.c_str(), payload.c_str(), true); // QoS 0, retain true
@@ -205,7 +226,7 @@ bool EasyMQTT::fetchDeviceConfig()
     delay(100);
   }
 
-  const char *url = "https://api.easylife.biz.id/auth/device/xxx";
+  const char *url = "https://api.easylife.biz.id/auth/device/" + _token;
 
   HTTPClient https;
   https.begin(_secureClient, url);
