@@ -226,7 +226,7 @@ bool EasyMQTT::fetchDeviceConfig()
     delay(100);
   }
 
-  const char *url = "https://api.easylife.biz.id/auth/device/" + _token;
+  const char *url = "https://api.easylife.biz.id/auth/device/" + _mqttToken;
 
   HTTPClient https;
   https.begin(_secureClient, url);
@@ -252,11 +252,6 @@ bool EasyMQTT::fetchDeviceConfig()
     _mqttUser = doc["mqttUser"] | "";
     _mqttPassword = doc["mqttPassword"] | "";
     _token = doc["token"] | "";
-
-    EASYMQTT_LOG("_mqttPort");
-    EASYMQTT_LOG(_mqttPort);
-    EASYMQTT_LOG("_mqttServer");
-    EASYMQTT_LOG(_mqttServer);
 
     return true;
   }
