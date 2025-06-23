@@ -41,5 +41,14 @@
             "name": "bblanchon/ArduinoJson",
             "version": "^7.4.1"
         }
-    ]
+    ],
+    "export": {
+        "include": [
+            "src",
+            "examples",
+            "library.json",
+            "README.md",
+            "LICENSE"
+        ]
+    }
 }
