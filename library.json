@@ -1,6 +1,6 @@
 {
     "name": "EasyMQTT",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Simple MQTT wrapper for ESP32, ESP8266, wemos with SSL, OTA, and Blynk-style usage",
     "keywords": [
         "mqtt",
