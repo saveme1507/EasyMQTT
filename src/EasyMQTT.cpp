@@ -1,14 +1,33 @@
 #include "EasyMQTT.h"
-#include <HTTPClient.h>
-#include <Update.h>
 #include "rootCA.h"
 #include <ArduinoJson.h>
+
+#if defined(ESP8266)
+#if __has_include(<ESP8266HTTPClient.h>)
+#include <ESP8266HTTPClient.h>
+#endif
+#if __has_include(<Update.h>)
+#include <Update.h>
+#endif
+
+#elif defined(ESP32)
+#if __has_include(<HTTPClient.h>)
+#include <HTTPClient.h>
+#endif
+#if __has_include(<Update.h>)
+#include <Update.h>
+#endif
+
+#else
+#error "EasyMQTT saat ini hanya mendukung ESP32 dan ESP8266."
+#endif
 
 std::vector<EasyMQTT::PendingHandler> EasyMQTT::_pendingHandlers;
 
 EasyMQTT *_instance = nullptr;
 
 unsigned long lastVPinTime[101] = {0}; // Index 0-100 untuk V0–V100
+unsigned long lastNotifTime = millis();
 
 EasyMQTT &EasyMQTT::getInstance()
 {
@@ -28,7 +47,7 @@ void EasyMQTT::begin(const char *ssid, const char *password)
     delay(500);
 
   EASYMQTT_LOG(WiFi.SSID());
-  EASYMQTT_LOG(WiFi.localIP());
+  EASYMQTT_LOG(WiFi.localIP().toString());
 
   _secureClient.stop();
   _secureClient.setInsecure();
@@ -40,7 +59,12 @@ void EasyMQTT::begin(const char *ssid, const char *password)
   }
 
   _secureClient.stop();
+
+#if defined(ESP32)
   _secureClient.setCACert(ROOT_CA);
+#elif defined(ESP8266)
+  _secureClient.setFingerprint("DE4A289704FFA86FA1822EBB1A26454B1F7ED39E");
+#endif
 
   _client.setClient(_secureClient);
   _client.setServer(_mqttServer.c_str(), _mqttPort);
@@ -63,7 +87,7 @@ void EasyMQTT::reconnect()
 {
   String willTopic = String(_user) + "/" + _device + "/status";
   const char *willMessage = "offline";
-  const int qos = 1;
+  const int qos = 2;
   const bool retain = true;
   const char *clientID = _device.c_str();
   const char *username = _mqttUser.c_str();
@@ -72,11 +96,11 @@ void EasyMQTT::reconnect()
 
   while (!_client.connected())
   {
-    EASYMQTT_LOG("Attempting MQTT connection...");
+    // EASYMQTT_LOG("Attempting MQTT connection...");
 
     if (_client.connect(clientID, username, password, willTopic.c_str(), qos, retain, willMessage, cleanSession))
     {
-      EASYMQTT_LOG("Connected to MQTT broker.");
+      // EASYMQTT_LOG("Connected to MQTT broker.");
 
       for (auto &kv : _callbacks)
       {
@@ -89,7 +113,7 @@ void EasyMQTT::reconnect()
 
       // Publish online status
       _client.publish(willTopic.c_str(), "online", retain);
-      EASYMQTT_LOG("Published online status.");
+      // EASYMQTT_LOG("Published online status.");
       registerPendingHandlers();
     }
     else
@@ -113,18 +137,45 @@ void EasyMQTT::subscribe(const String &vpin, EasyMQTTCallback callback)
 void EasyMQTT::publish(const String &vpin, const String &payload)
 {
   unsigned long now = millis();
+  int index = vpin.substring(1).toInt(); // hapus 'v', ambil angkanya
 
-  if ((long)(now - lastVPinTime[vpin]) < 500)
+  if (index >= 0 && index < 101)
   {
-    EASYMQTT_LOG(vpin + " publish terlalu cepat");
-    return;
-  }
+    if ((long)(now - lastVPinTime[index]) < 500)
+    {
+      EASYMQTT_LOG(vpin + " publish terlalu cepat");
+      return;
+    }
 
-  lastVPinTime[vpin] = now;
+    lastVPinTime[index] = now;
+  }
 
   EASYMQTT_LOG(getTopic(vpin).c_str());
   EASYMQTT_LOG(payload.c_str());
   _client.publish(getTopic(vpin).c_str(), payload.c_str());
+}
+
+void EasyMQTT::publish(const String &user, const String &device, const String &vpin, const String &payload)
+{
+  unsigned long now = millis();
+  int index = vpin.substring(1).toInt(); // hapus 'v', ambil angkanya
+
+  if (index >= 0 && index < 101)
+  {
+    if ((long)(now - lastVPinTime[index]) < 500)
+    {
+      EASYMQTT_LOG(vpin + " publish terlalu cepat");
+      return;
+    }
+
+    lastVPinTime[index] = now;
+  }
+
+  String topic = user + "/" + device + "/" + vpin;
+
+  EASYMQTT_LOG(topic.c_str());
+  EASYMQTT_LOG(payload.c_str());
+  _client.publish(topic.c_str(), payload.c_str());
 }
 
 String EasyMQTT::getTopic(const String &vpin)
@@ -162,7 +213,7 @@ void EasyMQTT::updateFirmware(const String &url, bool allowInsecure)
     int httpCode = https.GET();
     if (httpCode == HTTP_CODE_OK)
     {
-      int contentLength = https.getSize();
+      size_t contentLength = https.getSize(); // ✅ Gunakan size_t
       bool canBegin = Update.begin(contentLength);
 
       if (canBegin)
@@ -170,7 +221,7 @@ void EasyMQTT::updateFirmware(const String &url, bool allowInsecure)
         WiFiClient *updateClient = https.getStreamPtr();
         size_t written = Update.writeStream(*updateClient);
 
-        if (written == contentLength)
+        if (written == contentLength) // ✅ Tidak lagi warning
         {
           if (Update.end())
           {
@@ -226,16 +277,16 @@ bool EasyMQTT::fetchDeviceConfig()
     delay(100);
   }
 
-  const char *url = "https://api.easylife.biz.id/auth/device/" + _mqttToken;
+  String url = "https://api.easylife.biz.id/auth/device/" + _mqttToken;
 
   HTTPClient https;
-  https.begin(_secureClient, url);
+  https.begin(_secureClient, url.c_str());
 
   int httpCode = https.GET();
   if (httpCode == 200)
   {
     String payload = https.getString();
-    EASYMQTT_LOG(payload);
+    // EASYMQTT_LOG(payload);
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, payload);
     if (error)

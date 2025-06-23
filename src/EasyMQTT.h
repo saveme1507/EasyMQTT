@@ -3,7 +3,14 @@
 
 #define EASYMQTT_LOG(msg) Serial.println(String("[EasyMQTT] ") + msg)
 
+#if defined(ESP32)
 #include <WiFi.h>
+#elif defined(ESP8266)
+#include <ESP8266WiFi.h>
+#else
+#error "EasyMQTT saat ini hanya mendukung ESP32 dan ESP8266."
+#endif
+
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
 #include "EasyMQTTHandlers.h"
@@ -26,6 +33,10 @@
 #define EASYMQTT_WRITE_VPIN(vpin, msg) mqtt.publish(#vpin, msg)
 #endif
 
+#ifndef EASYMQTT_WRITE_CUSTOM
+#define EASYMQTT_WRITE_CUSTOM(user, device, vpin, msg) mqtt.publish(user, device, #vpin, msg)
+#endif
+
 // init class
 typedef std::function<void(String)> EasyMQTTCallback;
 
@@ -38,6 +49,7 @@ public:
   void loop();
   void subscribe(const String &virtualPin, EasyMQTTCallback callback);
   void publish(const String &virtualPin, const String &payload);
+  void publish(const String &user, const String &device, const String &virtualPin, const String &payload);
   void onConnected(EasyMQTTConnectedHandler handler);
   void onDisconnected(EasyMQTTDisconnectedHandler handler);
   void onMessage(EasyMQTTMessageHandler handler);

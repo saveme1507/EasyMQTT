@@ -1,18 +1,5 @@
 #include <EasyMQTT.h>
 
-// Konfigurasi WiFi dan MQTT
-const char *WIFI_SSID = "your-ssid";
-const char *WIFI_PASSWORD = "your-password";
-
-const char *MQTT_SERVER = "mqtt.easylife.biz.id";
-const int MQTT_PORT = 8883;
-const char *MQTT_USER = "username";
-const char *MQTT_PASS = "password";
-
-// Identitas device
-const char *USER = "user";
-const char *DEVICE = "esp32";
-
 #define EASY_MQTT_TOKEN "XXXXX"
 
 // Inisialisasi EasyMQTT
