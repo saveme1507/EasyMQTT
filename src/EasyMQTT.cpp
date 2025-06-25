@@ -3,23 +3,13 @@
 #include <ArduinoJson.h>
 
 #if defined(ESP8266)
-#if __has_include(<ESP8266HTTPClient.h>)
 #include <ESP8266HTTPClient.h>
-#endif
-#if __has_include(<Update.h>)
 #include <Update.h>
-#endif
-
 #elif defined(ESP32)
-#if __has_include(<HTTPClient.h>)
 #include <HTTPClient.h>
-#endif
-#if __has_include(<Update.h>)
 #include <Update.h>
-#endif
-
 #else
-#error "EasyMQTT saat ini hanya mendukung ESP32 dan ESP8266."
+#error "EasyMQTT hanya mendukung ESP32 dan ESP8266"
 #endif
 
 std::vector<EasyMQTT::PendingHandler> EasyMQTT::_pendingHandlers;
