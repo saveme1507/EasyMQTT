@@ -1,10 +1,10 @@
 #include "EasyMQTT.h"
-#include "rootCA.h"
+// #include "rootCA.h"
 #include <ArduinoJson.h>
 
 #if defined(ESP8266)
 #include <ESP8266HTTPClient.h>
-#include <Update.h>
+#include <Updater.h>
 #elif defined(ESP32)
 #include <HTTPClient.h>
 #include <Update.h>
@@ -30,6 +30,44 @@ EasyMQTT::EasyMQTT(const char *token)
   _instance = this;
 }
 
+void EasyMQTT::begin()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    EASYMQTT_LOG("WiFi tidak terhubung. Silakan hubungkan ke WiFi terlebih dahulu.");
+    return;
+  }
+
+  EASYMQTT_LOG(WiFi.SSID());
+  EASYMQTT_LOG(WiFi.localIP().toString());
+
+  _secureClient.stop();
+  _secureClient.setInsecure();
+
+  if (!fetchDeviceConfig())
+  {
+    EASYMQTT_LOG("Gagal mengambil konfigurasi");
+    return;
+  }
+
+  _secureClient.stop();
+
+#if defined(ESP32)
+  _secureClient.setCACert(_rootCA.c_str());
+#elif defined(ESP8266)
+  _secureClient.setFingerprint(_fingerPrint.c_str());
+#endif
+
+  _client.setClient(_secureClient);
+  _client.setServer(_mqttServer.c_str(), _mqttPort);
+  _client.setCallback([this](char *topic, byte *payload, unsigned int length)
+                      {
+    String t = topic;
+    String message;
+    for (unsigned int i = 0; i < length; i++) message += (char)payload[i];
+    if (_callbacks.count(t)) _callbacks[t](message); });
+}
+
 void EasyMQTT::begin(const char *ssid, const char *password)
 {
   WiFi.begin(ssid, password);
@@ -51,9 +89,9 @@ void EasyMQTT::begin(const char *ssid, const char *password)
   _secureClient.stop();
 
 #if defined(ESP32)
-  _secureClient.setCACert(ROOT_CA);
+  _secureClient.setCACert(_rootCA.c_str());
 #elif defined(ESP8266)
-  _secureClient.setFingerprint("DE4A289704FFA86FA1822EBB1A26454B1F7ED39E");
+  _secureClient.setFingerprint(_fingerPrint.c_str());
 #endif
 
   _client.setClient(_secureClient);
@@ -293,6 +331,8 @@ bool EasyMQTT::fetchDeviceConfig()
     _mqttUser = doc["mqttUser"] | "";
     _mqttPassword = doc["mqttPassword"] | "";
     _token = doc["token"] | "";
+    _fingerPrint = doc["fingerPrint"] | "";
+    _rootCA = doc["rootCA"] | "";
 
     return true;
   }

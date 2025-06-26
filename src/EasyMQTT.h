@@ -45,6 +45,7 @@ class EasyMQTT
 public:
   EasyMQTT(const char *token);
   static EasyMQTT &getInstance();
+  void begin();
   void begin(const char *ssid, const char *password);
   void loop();
   void subscribe(const String &virtualPin, EasyMQTTCallback callback);
@@ -79,6 +80,8 @@ private:
   String _mqttPassword;
   String _token;
   String _mqttToken;
+  String _rootCA;
+  String _fingerPrint;
 
   int _mqttPort;
 
