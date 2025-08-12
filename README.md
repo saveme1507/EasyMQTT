@@ -51,7 +51,9 @@ Library ini terintegrasi langsung dengan aplikasi **EasyLife IoT** untuk memudah
 ---
 
 ## 🛠 Cara Menggunakan EasyMQTT
-**EASY_MQTT_TOKEN** isi dengan token device pada aplikasi **Easlife-IoT**, menu perangkat dapat dilihat pada menu **home->buka_sidebar->Perangkat->Pilih_perangkat/device ESP->Token Device**
+- **EASY_MQTT_TOKEN** isi dengan token device pada aplikasi **Easlife-IoT**, menu perangkat dapat dilihat pada menu **home->buka_sidebar->Perangkat->Pilih_perangkat/device ESP->Token Device**
+
+- **Virtual PIN** tersedia dari **V0** sampai **V100**
 
 ### 💻 Basic Usage
 ```cpp
@@ -132,3 +134,98 @@ Comming soon
 ```
 ---
 ## 📲 Cara Menggunakan EasyLife IoT
+
+### Step 1: Buat Project di EasyLife IoT
+
+1. **Login** ke dashboard EasyLife IoT di browser.
+2. Cari menu **Projects** di sidebar.
+3. Klik tombol **Add Project** atau **+ New Project**.
+4. Isi nama project, contoh: `SmartHome`.
+5. Klik **Save**.
+
+### Step 2: Buat Dashboard dalam Project
+
+1. Masuk ke halaman project yang baru dibuat.
+2. Pilih menu **Dashboards**.
+3. Klik tombol **Add Dashboard**.
+4. Isi nama dashboard, contoh: `Dashboard Ruang Tamu`.
+5. Klik **Save**.
+
+### Step 3: Daftarkan Device
+
+1. Masih di dalam project, pilih menu **Devices**.
+2. Klik **Add Device**.
+3. Isi nama device, contoh: `ESP32 Sensor 1`.
+4. Klik **Save**.
+5. Setelah device terbuat, **salin Device Token** yang muncul (ini akan dipakai di kode ESP).
+
+### Step 4: Setup Kode ESP dengan Token
+
+1. Buka IDE (Arduino IDE atau PlatformIO).
+2. Siapkan kode ESP berikut (contoh ESP32 + EasyMQTT):
+
+```cpp
+#include <EasyMQTT.h>
+
+#define EASY_MQTT_TOKEN "TOKEN_DEVICE_YANG_KAMU_SALIN"
+
+// Inisialisasi dengan:
+EasyMQTT mqtt(EASY_MQTT_TOKEN);
+
+EASYMQTT_WRITE(V0) {
+    Serial.println("Terima dari V0: " + payload);
+    EASYMQTT_WRITE_VPIN(V2, "Jawaban ke V2");
+}
+
+void setup() {
+    Serial.begin(115200);
+
+    Serial.println("init setup");
+
+    // Hubungkan ke WiFi
+    mqtt.begin("WIFI_SSID", "WIFI_PASSWORD");
+
+    // Handler saat terputus dari broker MQTT
+    mqtt.onDisconnected([]() { Serial.println("Terputus dari MQTT"); });
+}
+
+void loop() {
+    mqtt.loop();  // Penting: proses internal MQTT
+}
+```
+
+3. Ganti `ssid`, `password`, dan `EASY_MQTT_TOKEN` sesuai milikmu.
+4. Upload kode ke ESP.
+
+### Step 5: Cek Koneksi Device di Dashboard
+
+* Di dashboard EasyLife IoT, buka menu **Devices** → Device yang kamu buat.
+* Pastikan status device muncul **Online**.
+* Jika serial monitor ESP menunjukkan `MQTT Connected`, berarti sudah berhasil.
+
+### Step 6: Tambah Widget ke Dashboard
+
+1. Masuk ke **Dashboard** yang sudah dibuat.
+2. Klik tombol **Add Widget** atau `+`.
+3. Pilih jenis widget, misalnya **Value Display** untuk menampilkan angka suhu.
+4. Pilih device `ESP32 Sensor 1`.
+5. Pilih virtual pin, misalnya `vPin 1`.
+6. Isi label widget, misal: `Suhu Ruang`.
+7. Simpan widget.
+
+### Step 7: Lihat Data di Dashboard
+
+* Tunggu beberapa saat.
+* Widget akan otomatis menampilkan data yang dikirim ESP ke virtual pin 1.
+* Data akan update sesuai interval kirim data dari ESP.
+
+![Arsitektur EasyMQTT](https://api.easylife.biz.id/public/images/sample_dashboard.png)
+
+
+### Tips tambahan
+
+* Kamu bisa buat banyak widget dengan berbagai virtual pin.
+* Bisa juga menambahkan widget tombol untuk mengirim perintah ke device.
+* Virtual pin bersifat fleksibel untuk berbagai tipe data (angka, teks, status).
+
+---
