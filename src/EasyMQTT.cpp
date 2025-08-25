@@ -222,9 +222,17 @@ void EasyMQTT::sendNotification(const String &title, const String &message)
 
   lastNotifTime = now;
 
-  String topic = String(_user) + "/" + _device + "/notification";
-  String payload = "{\"title\":\"" + title + "\",\"message\":\"" + message + "\"}";
-  _client.publish(topic.c_str(), payload.c_str(), true); // QoS 0, retain true
+  // OLD VERSION
+  // String topic = String(_user) + "/" + _device + "/notification";
+  // String payload = "{\"title\":\"" + title + "\",\"message\":\"" + message + "\"}";
+
+  // escape title & message agar JSON valid
+  String safeTitle = escapeJson(title);
+  String safeMessage = escapeJson(message);
+
+  String payload = "{\"title\":\"" + safeTitle + "\",\"message\":\"" + safeMessage + "\"}";
+
+  _client.publish(topic.c_str(), payload.c_str(), false); // QoS 0, retain true
 }
 
 void EasyMQTT::updateFirmware(const String &url, bool allowInsecure)
@@ -288,6 +296,43 @@ void EasyMQTT::updateFirmware(const String &url, bool allowInsecure)
   {
     Serial.println("Gagal mengakses URL OTA");
   }
+}
+
+String escapeJson(const String &input)
+{
+  String out = "";
+  for (size_t i = 0; i < input.length(); i++)
+  {
+    char c = input[i];
+    switch (c)
+    {
+    case '\"':
+      out += "\\\"";
+      break; // escape double quote
+    case '\\':
+      out += "\\\\";
+      break; // escape backslash
+    case '\b':
+      out += "\\b";
+      break;
+    case '\f':
+      out += "\\f";
+      break;
+    case '\n':
+      out += "\\n";
+      break; // escape newline
+    case '\r':
+      out += "\\r";
+      break;
+    case '\t':
+      out += "\\t";
+      break;
+    default:
+      out += c;
+      break;
+    }
+  }
+  return out;
 }
 
 bool EasyMQTT::isConnected()
