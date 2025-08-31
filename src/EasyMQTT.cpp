@@ -206,6 +206,43 @@ void EasyMQTT::publish(const String &user, const String &device, const String &v
   _client.publish(topic.c_str(), payload.c_str());
 }
 
+String escapeJson(const String &input)
+{
+  String out = "";
+  for (size_t i = 0; i < input.length(); i++)
+  {
+    char c = input[i];
+    switch (c)
+    {
+    case '\"':
+      out += "\\\"";
+      break; // escape double quote
+    case '\\':
+      out += "\\\\";
+      break; // escape backslash
+    case '\b':
+      out += "\\b";
+      break;
+    case '\f':
+      out += "\\f";
+      break;
+    case '\n':
+      out += "\\n";
+      break; // escape newline
+    case '\r':
+      out += "\\r";
+      break;
+    case '\t':
+      out += "\\t";
+      break;
+    default:
+      out += c;
+      break;
+    }
+  }
+  return out;
+}
+
 String EasyMQTT::getTopic(const String &vpin)
 {
   return String(_user) + "/" + _device + "/" + vpin;
@@ -223,7 +260,7 @@ void EasyMQTT::sendNotification(const String &title, const String &message)
   lastNotifTime = now;
 
   // OLD VERSION
-  // String topic = String(_user) + "/" + _device + "/notification";
+  String topic = String(_user) + "/" + _device + "/notification";
   // String payload = "{\"title\":\"" + title + "\",\"message\":\"" + message + "\"}";
 
   // escape title & message agar JSON valid
@@ -296,43 +333,6 @@ void EasyMQTT::updateFirmware(const String &url, bool allowInsecure)
   {
     Serial.println("Gagal mengakses URL OTA");
   }
-}
-
-String escapeJson(const String &input)
-{
-  String out = "";
-  for (size_t i = 0; i < input.length(); i++)
-  {
-    char c = input[i];
-    switch (c)
-    {
-    case '\"':
-      out += "\\\"";
-      break; // escape double quote
-    case '\\':
-      out += "\\\\";
-      break; // escape backslash
-    case '\b':
-      out += "\\b";
-      break;
-    case '\f':
-      out += "\\f";
-      break;
-    case '\n':
-      out += "\\n";
-      break; // escape newline
-    case '\r':
-      out += "\\r";
-      break;
-    case '\t':
-      out += "\\t";
-      break;
-    default:
-      out += c;
-      break;
-    }
-  }
-  return out;
 }
 
 bool EasyMQTT::isConnected()
